@@ -70,7 +70,7 @@
 
           if (ironRequestInst.status === 200) {
             alert('El contacto se guardo correctamente');
-            autoBind.set('data', e.detail.response);
+            autoBind.set('data', ironRequestInst.response);
             localStorage.setItem('contacts', JSON.stringify(ironRequestInst.response));
           }
         };

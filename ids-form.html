@@ -1,13 +1,11 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../polymer/lib/elements/dom-repeat.html">
-<link rel="import" href="../polymer/lib/elements/dom-if.html">
 <link rel="import" href="../iron-form/iron-form.html">
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-button/paper-button.html">
 
 <dom-module id="ids-form">
   <template>
-
     <style>
       :host {
         display: block;
@@ -35,8 +33,8 @@
         </template>
         
         <slot name="buttons">
-          <paper-button raised on-click="sendHandler">Enviar</paper-button>
-          <paper-button raised on-click="cancelHandler">Cancelar</paper-button>
+          <paper-button raised on-click="sendHandler" class="primary">Enviar</paper-button>
+          <paper-button raised on-click="cancelHandler" class="danger">Cancelar</paper-button>
         <slot>
       </form>
     </iron-form>
