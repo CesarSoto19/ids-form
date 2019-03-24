@@ -10,6 +10,7 @@
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../polymer/lib/elements/dom-bind.html">
     <link rel="import" href="../ids-form.html">
 
     <custom-style>
@@ -20,11 +21,80 @@
   <body>
     <div class="vertical-section-container centered">
       <h3>Basic ids-form demo</h3>
-      <demo-snippet>
+
+      <dom-bind>
         <template>
-          <ids-form></ids-form>
+          [[stringify(helper.data)]]
+          <ids-form on-ids-form-response="responseHandler"
+            action="[[action]]"
+            enctype="[[enctype]]"
+            method="PUT"
+            is-bypass
+            bypass-helper="[[helper]]"
+            fields="[[fields]]">
+            <h1 slot="header">Datos de contacto</h1>            
+          </ids-form>
         </template>
-      </demo-snippet>
+      </dom-bind>
+      <script>
+        const autoBind = document.querySelector('dom-bind');
+
+        // El servicio regresa un objeto como este: { uri: "https://api.myjson.com/bins/lo732" } 
+        // del cual debemos tomar el Id que es la ultima parte del path
+        autoBind.action = 'https://api.myjson.com/bins/197w26';
+        autoBind.enctype = 'application/json';
+        autoBind.stringify = (data) => {
+          return JSON.stringify(data);
+        };
+
+        autoBind.helper = {
+          data: JSON.parse(localStorage.getItem('contacts')) || [], 
+          callback: function (request, formData, data) {
+            formData.id = Math.random().toString(36).substring(2);
+            const newData = data.concat(formData);
+            request.params = {}; // to avoid send query string params
+            request.body = newData;
+            autoBind.set('helper.data', newData);
+            request.generateRequest();
+          }
+        };
+
+        autoBind.responseHandler = (e) => {
+          localStorage.setItem('contacts', JSON.stringify(autoBind.helper.data));
+        };
+
+        autoBind.fields = [{ 
+            label: 'Escribe tu nombre',
+            name: 'nombre',
+            required: true,
+            autoValidate: true,
+            pattern: '^[a-zA-Z\\s]{10,}$',
+            value: ''
+          },
+          {
+            label: 'Email',
+            name: 'email',
+            email: 'jaime.cervantes@email.com', 
+            required: true,
+            autoValidate: true,
+            pattern: '^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$',
+            value: ''
+          },
+          { 
+            label: 'Telefono',
+            name: 'telefono',
+            required: true,
+            value: ''
+          },
+          {
+            label: 'Telefono Trabajo',
+            name: 'telefonoTrabajo',
+            value: ''
+          }
+        ];
+
+        localStorage.setItem('contacts', '[]');
+      </script>
     </div>
   </body>
 </html>

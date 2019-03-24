@@ -3,8 +3,9 @@
   "main": "ids-form.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
-    "ids-input-db": "https://github.com/jaimeCervantes/ids-input-db.git",
-    "paper-input": "@polymer/paper-input#^2.0.0"
+    "paper-input": "@polymer/paper-input#^2.0.0",
+    "iron-form": "@polymer/iron-form#^2.0.0",
+    "paper-button": "@polymer/paper-button#^2.0.0"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",

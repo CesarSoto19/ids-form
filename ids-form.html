@@ -1,49 +1,47 @@
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../ids-input-db/ids-input-db.html">
+<link rel="import" href="../polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../iron-form/iron-form.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
 
 <dom-module id="ids-form">
   <template>
     <style>
       :host {
         display: block;
-        padding: 20px;
-      }
-
-      ids-input-db {
-        padding: 20px;
       }
     </style>
+    {{fn}}
+    <iron-form id="ironForm" on-iron-form-response="responseHandler" on-iron-form-submit="submitHandler" on-iron-form-presubmit="presubmitHandler">
+      <form action="[[action]]" method="[[method]]" enctype="[[enctype]]">
+        
+        <slot name="header"></slot>        
+        
+        <template is="dom-repeat" items="[[fields]]" as="itemActual">
+          <paper-input 
+          always-float-label
+          label="[[itemActual.label]]"
+          required="[[itemActual.required]]"
+          type="[[itemActual.type]]"
+          auto-validate="[[itemActual.autoValidate]]"
+          name=[[itemActual.name]]
+          pattern="[[itemActual.pattern]]"
+          value={{itemActual.value}}
+          placeholder="[[placeholder]]"></paper-input>
+        </template>
+        
+        <slot name="buttons">
+          <paper-button raised on-click="sendHandler">Enviar</paper-button>
+          <paper-button raised on-click="cancelHandler">Cancelar</paper-button>
+        <slot>
+      </form>
+    </iron-form>
 
-    [[valuePadre]]
-    <ids-input-db id="nombre" value="{{valuePadre}}" ></ids-input-db>
-    [[email]]
-    <paper-input
-      type="email"
-      always-float-label
-      label="Escribe tu email"
-      value={{email}}
-      placeholder="Aqui va tu email"
-      auto-validate
-      pattern="^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$"
-    >
-    </paper-input>
-
-    <paper-input
-      type="tel"
-      always-float-label
-      label="Escribe tu telefono"
-      value={{telefono}}
-      placeholder="Aqui va tu telefono"
-      auto-validate
-      pattern="^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$"
-    >
-    </paper-input>
   </template>
-
   <script>
     /**
-     * `ids-form`
+     * `input-container`
      * 
      *
      * @customElement
@@ -52,13 +50,50 @@
      */
     class IdsForm extends Polymer.Element {
       static get is() { return 'ids-form'; }
-      static get properties() {
+
+      static get properties () {
         return {
-          valuePadre: String,
-          email: String,
-          telefono: String
-        };
+          action: String,
+          method: String,
+          enctype: String,
+          fields: {
+            type: Array,
+            value: () => [],
+          },
+          isBypass: Boolean,
+          byPassHelper: {
+            type: Object,
+            value: () => {
+              return { data: [], callback: () => {} }
+            }
+          }
+        }
       }
+
+      sendHandler (e) {
+        e.preventDefault();
+        this.$.ironForm.submit();
+      }
+
+      responseHandler(e) {
+        const newCustomEvent = new CustomEvent('ids-form-response', { 
+            detail: e.detail.response,
+            bubbles: true,
+            composed: true
+          });
+
+        this.dispatchEvent(newCustomEvent);
+      }
+
+      presubmitHandler (e) {
+        if (this.isBypass && this.bypassHelper && this.bypassHelper.callback) {
+          // iron-ajax sabe si prevenimos el submit y entonces podemos modificar los datos de la petición y ejecutarla cuando nos convenga
+          e.preventDefault(); 
+          const form = this.$.ironForm;
+          this.bypassHelper.callback(form.request, form.serializeForm(), this.bypassHelper.data)
+        }
+      }
+
     }
 
     window.customElements.define(IdsForm.is, IdsForm);
