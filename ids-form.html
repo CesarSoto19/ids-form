@@ -7,12 +7,13 @@
 
 <dom-module id="ids-form">
   <template>
+
     <style>
       :host {
         display: block;
       }
     </style>
-    {{fn}}
+
     <iron-form id="ironForm" on-iron-form-response="responseHandler" on-iron-form-submit="submitHandler" on-iron-form-presubmit="presubmitHandler">
       <form action="[[action]]" method="[[method]]" enctype="[[enctype]]">
         
@@ -39,6 +40,7 @@
     </iron-form>
 
   </template>
+  
   <script>
     /**
      * `input-container`
@@ -61,12 +63,7 @@
             value: () => [],
           },
           isBypass: Boolean,
-          byPassHelper: {
-            type: Object,
-            value: () => {
-              return { data: [], callback: () => {} }
-            }
-          }
+          byPassHelper: Function
         }
       }
 
@@ -75,9 +72,13 @@
         this.$.ironForm.submit();
       }
 
+      cancelHandler () {
+        this.$.ironForm.reset();
+      }
+
       responseHandler(e) {
         const newCustomEvent = new CustomEvent('ids-form-response', { 
-            detail: e.detail.response,
+            detail: e.detail,
             bubbles: true,
             composed: true
           });
@@ -86,11 +87,11 @@
       }
 
       presubmitHandler (e) {
-        if (this.isBypass && this.bypassHelper && this.bypassHelper.callback) {
+        if (this.isBypass && this.bypassHelper) {
           // iron-ajax sabe si prevenimos el submit y entonces podemos modificar los datos de la petición y ejecutarla cuando nos convenga
           e.preventDefault(); 
           const form = this.$.ironForm;
-          this.bypassHelper.callback(form.request, form.serializeForm(), this.bypassHelper.data)
+          this.bypassHelper(form.request, form.serializeForm())
         }
       }
 
