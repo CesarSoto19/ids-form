@@ -24,16 +24,20 @@
 
       <dom-bind>
         <template>
-          [[stringify(helper.data)]]
-          <ids-form on-ids-form-response="responseHandler"
+          <ids-form
+            on-ids-form-presubmit-bypass="presubmitBypassHandler"
+            on-ids-form-response="responseHandler"
             action="[[action]]"
             enctype="[[enctype]]"
             method="PUT"
             is-bypass
-            bypass-helper="[[helper]]"
             fields="[[fields]]">
             <h1 slot="header">Datos de contacto</h1>            
           </ids-form>
+          <div>
+            [[stringify(data)]]
+          </div>
+          
         </template>
       </dom-bind>
       <script>
@@ -43,24 +47,32 @@
         // del cual debemos tomar el Id que es la ultima parte del path
         autoBind.action = 'https://api.myjson.com/bins/197w26';
         autoBind.enctype = 'application/json';
+        
         autoBind.stringify = (data) => {
           return JSON.stringify(data);
         };
 
-        autoBind.helper = {
-          data: JSON.parse(localStorage.getItem('contacts')) || [], 
-          callback: function (request, formData, data) {
-            formData.id = Math.random().toString(36).substring(2);
-            const newData = data.concat(formData);
-            request.params = {}; // to avoid send query string params
-            request.body = newData;
-            autoBind.set('helper.data', newData);
-            request.generateRequest();
-          }
+        autoBind.data = JSON.parse(localStorage.getItem('contacts')) || [];
+
+        autoBind.presubmitBypassHandler = (e) => {
+          const ironRequest = e.detail.ironRequest;
+          const newId = Math.random().toString(36).substring(2);
+          const serializedData = Object.assign({}, e.detail.serializedData, { id: newId }); // {...objeto, ...otroOjeto}
+          const newData = autoBind.data.concat(serializedData); // [...array, otroArray]
+          
+          ironRequest.params = {}; // to avoid send query string params
+          ironRequest.body = newData;
+          ironRequest.generateRequest(); // send de request
         };
 
         autoBind.responseHandler = (e) => {
-          localStorage.setItem('contacts', JSON.stringify(autoBind.helper.data));
+          const ironRequestInst = e.detail; 
+
+          if (ironRequestInst.status === 200) {
+            alert('El contacto se guardo correctamente');
+            autoBind.set('data', e.detail.response);
+            localStorage.setItem('contacts', JSON.stringify(ironRequestInst.response));
+          }
         };
 
         autoBind.fields = [{ 

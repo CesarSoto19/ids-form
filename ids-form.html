@@ -11,6 +11,7 @@
     <style>
       :host {
         display: block;
+        margin-bottom: var(--ids-form-space-y, 1.5rem);
       }
     </style>
 
@@ -21,15 +22,16 @@
         
         <template is="dom-repeat" items="[[fields]]" as="itemActual">
           <paper-input 
-          always-float-label
-          label="[[itemActual.label]]"
-          required="[[itemActual.required]]"
-          type="[[itemActual.type]]"
-          auto-validate="[[itemActual.autoValidate]]"
-          name=[[itemActual.name]]
-          pattern="[[itemActual.pattern]]"
-          value={{itemActual.value}}
-          placeholder="[[placeholder]]"></paper-input>
+            always-float-label
+            label="[[itemActual.label]]"
+            required="[[itemActual.required]]"
+            type="[[itemActual.type]]"
+            auto-validate="[[itemActual.autoValidate]]"
+            name=[[itemActual.name]]
+            pattern="[[itemActual.pattern]]"
+            value={{itemActual.value}}
+            placeholder="[[placeholder]]"
+          ></paper-input>
         </template>
         
         <slot name="buttons">
@@ -40,7 +42,7 @@
     </iron-form>
 
   </template>
-  
+
   <script>
     /**
      * `input-container`
@@ -62,14 +64,21 @@
             type: Array,
             value: () => [],
           },
-          isBypass: Boolean,
-          byPassHelper: Function
+          isBypass: Boolean
         }
       }
 
       sendHandler (e) {
-        e.preventDefault();
         this.$.ironForm.submit();
+      }
+
+      submitHandler (e) {
+        const serializedData = e.detail;
+        const newCustomEvent = new CustomEvent('ids-form-submit', {
+          detail: serializedData,
+          bubbes: true,
+          composed: true
+        });
       }
 
       cancelHandler () {
@@ -77,21 +86,31 @@
       }
 
       responseHandler(e) {
+        const ironRequestInstance = e.detail;
         const newCustomEvent = new CustomEvent('ids-form-response', { 
-            detail: e.detail,
-            bubbles: true,
-            composed: true
-          });
+          detail: ironRequestInstance,
+          bubbles: true,
+          composed: true
+        });
 
         this.dispatchEvent(newCustomEvent);
       }
 
       presubmitHandler (e) {
-        if (this.isBypass && this.bypassHelper) {
+        if (this.isBypass) {
           // iron-ajax sabe si prevenimos el submit y entonces podemos modificar los datos de la petición y ejecutarla cuando nos convenga
           e.preventDefault(); 
           const form = this.$.ironForm;
-          this.bypassHelper(form.request, form.serializeForm())
+          const newCustomEvent = new CustomEvent('ids-form-presubmit-bypass', {
+            detail: {
+              ironRequest: form.request,
+              serializedData: form.serializeForm()
+            },
+            bubbles: true,
+            composed: true
+          });
+
+          this.dispatchEvent(newCustomEvent);
         }
       }
 
